@@ -7,6 +7,9 @@ cd mpv-build-lite
 gcc_version="$(cat toolchain/CMakeLists.txt | grep -ioP 'gcc-\d+\.\d+\.\d+' | sort -u | grep -ioP '[\d\.]+')"
 binutils_version="$(cat toolchain/CMakeLists.txt | grep -ioP 'binutils-\d+\.\d+' | sort -u | grep -ioP '[\d\.]+')"
 
+# patch source to drop msys2-only workaround
+sed -i '/GIT_TAG "v2017.2"/d' packages/spirv-tools.cmake
+
 # init cmake
 mkdir -p build64
 cd build64

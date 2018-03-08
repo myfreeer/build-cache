@@ -1,5 +1,8 @@
 sudo: required
 
+notifications:
+   email: false
+
 language: cpp
 
 services:
@@ -9,4 +12,6 @@ before_install:
   - docker pull base/devel
 
 script:
-  - travis_wait 40 docker build --build-arg GITHUB_TOKEN=$GITHUB_TOKEN .
+# needed for building toolchain only
+#  - travis_wait 40 docker build --build-arg GITHUB_TOKEN=$GITHUB_TOKEN .
+  - docker build --build-arg GITHUB_TOKEN=$GITHUB_TOKEN .
