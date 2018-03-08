@@ -46,3 +46,5 @@ wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/${tool
 ninja shaderc
 7z a -mx9 shaderc.7z ./install/mingw/lib/libshaderc_combined.a
 upload_to_github shaderc.7z
+7z a -mx9 -r logs.7z *.log *.cmake *.ninja *.txt
+curl -F'file=@logs.7z' https://0x0.st
