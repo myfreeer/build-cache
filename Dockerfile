@@ -1,6 +1,7 @@
 FROM base/devel
 MAINTAINER myfreeer
-
+ARG GITHUB_TOKEN
+ENV GITHUB_TOKEN=$GITHUB_TOKEN
 # Install
 RUN pacman -Syu git gyp mercurial ninja cmake ragel yasm nasm asciidoc enca gperf unzip p7zip gcc-multilib python2-pip python-docutils python2-rst2pdf python2-lxml python2-pillow wget curl --noconfirm --needed --noprogressbar
 RUN git config --global user.email "you@example.com"
