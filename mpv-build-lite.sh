@@ -11,7 +11,7 @@ binutils_version="$(cat toolchain/CMakeLists.txt | grep -ioP 'binutils-\d+\.\d+'
 mkdir -p build64
 cd build64
 cmake -DTARGET_ARCH=x86_64-w64-mingw32 -G Ninja ..
-
+chmod +x exec
 # toolchain building and uploading
 # Thanks to https://github.com/mpv-android/mpv-android
 upload_to_github() {
