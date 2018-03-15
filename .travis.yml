@@ -14,4 +14,4 @@ before_install:
 script:
 # needed for building toolchain only
 #  - travis_wait 40 docker build --build-arg GITHUB_TOKEN=$GITHUB_TOKEN .
-  - docker build --build-arg GITHUB_TOKEN=$GITHUB_TOKEN .
+  - travis_wait 60 docker build --build-arg GITHUB_TOKEN=$GITHUB_TOKEN .
