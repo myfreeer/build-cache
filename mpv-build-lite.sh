@@ -48,7 +48,7 @@ wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/${tool
 # build packages
 ninja shaderc crossc
 7z a -mx9 shaderc_and_crossc.7z \
-    ./install/mingw/lib/libshaderc_combined.a \
+    install/mingw/lib/libshaderc_combined.a \
     install/mingw/include/shaderc/* \
     install/mingw/include/crossc.h \
     install/mingw/lib/pkgconfig/crossc.pc \
