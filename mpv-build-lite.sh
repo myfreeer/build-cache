@@ -4,8 +4,8 @@ git clone https://github.com/myfreeer/mpv-build-lite.git --depth=1
 cd mpv-build-lite
 
 # init toolchain versions
-gcc_version="$(cat toolchain/CMakeLists.txt | grep -ioP 'gcc-\d+\.\d+\.\d+' | sort -u | grep -ioP '[\d\.]+')"
-binutils_version="$(cat toolchain/CMakeLists.txt | grep -ioP 'binutils-\d+\.\d+' | sort -u | grep -ioP '[\d\.]+')"
+gcc_version="$(cat toolchain/gcc-base.cmake | grep -ioP 'gcc-\d+\.\d+\.\d+' | sort -u | grep -ioP '[\d\.]+')"
+binutils_version="$(cat toolchain/binutils.cmake | grep -ioP 'binutils-\d+\.\d+' | sort -u | grep -ioP '[\d\.]+')"
 
 # patch source to drop msys2-only workaround
 sed -i '/GIT_TAG "v2017.2"/d' packages/spirv-tools.cmake
