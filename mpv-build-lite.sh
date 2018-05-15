@@ -1,6 +1,6 @@
 #!/bin/bash
 # clone repo
-git clone https://github.com/myfreeer/mpv-build-lite.git --depth=1
+git clone https://github.com/myfreeer/mpv-build-lite.git --branch=toolchain --depth=1
 cd mpv-build-lite
 
 # init toolchain versions
