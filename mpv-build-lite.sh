@@ -6,9 +6,9 @@ cd mpv-build-lite
 # init toolchain versions
 gcc_version="$(cat toolchain/gcc-base.cmake | grep -ioP 'gcc-\d+\.\d+\.\d+' | sort -u | grep -ioP '[\d\.]+')"
 binutils_version="$(cat toolchain/binutils.cmake | grep -ioP 'binutils-(\d+\.)+\d+' | sort -u | grep -ioP '[\d\.]+')"
-
-# patch source to drop msys2-only workaround
-sed -i '/GIT_TAG "v2017.2"/d' packages/spirv-tools.cmake
+gmp_version="$(grep -ioP 'gmp-((\d+\.)+\d+)' packages/gmp.cmake | cut -d'-' -f2)"
+xvidcore_version="$(grep -ioP 'xvidcore-((\d+\.)+\d+)' packages/xvidcore.cmake | cut -d'-' -f2)"
+libiconv_version="$(grep -ioP 'libiconv-((\d+\.)+\d+)' packages/libiconv.cmake | cut -d'-' -f2)"
 
 # init cmake
 mkdir -p build64
@@ -39,13 +39,41 @@ build_toolchain() {
         upload_to_github "${toolchain_package}"
     fi
 }
+build_package() {
+    local name=$1
+    local version="$(eval echo "\${${name}_version}")"
+    local package="$(eval echo "\${${name}_package}")"
+    local files="$(eval echo "\${${name}_files}")"
+    echo Building ${name} ${version}...
+    ninja ${name}
+    if [ -n "$GITHUB_TOKEN" ]; then
+        echo Packing ${name} ${version}...
+        7z a -mx9 "${package}" ${files}
+        echo Uploading ${name} ${version} to cache...
+        upload_to_github "${package}"
+    fi
+}
 # init toolchain
 toolchain_package="gcc-${gcc_version}_binutils-${binutils_version}.7z"
+gmp_package="gmp-${gmp_version}.7z"
+gmp_files='install/mingw/share/info install/mingw/lib/libgmp* install/mingw/include/gmp.h'
+xvidcore_package="xvidcore-${xvidcore_version}.7z"
+xvidcore_files='install/mingw/include/xvid.h install/mingw/lib/libxvidcore*'
+libiconv_package="libiconv-${libiconv_version}.7z"
+libiconv_files='install/mingw/bin/iconv* install/mingw/share/man install/mingw/lib/libcharset* install/mingw/lib/libiconv* install/mingw/include/iconv.h install/mingw/include/libcharset.h install/mingw/include/localcharset.h'
 
 wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/${toolchain_package}" && \
      7z x "${toolchain_package}" && rm -f "${toolchain_package}" || build_toolchain
 
-# build packages
+# build versioned packages
+wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/${gmp_package}" && \
+     7z x "${gmp_package}" && rm -f "${gmp_package}" || build_package gmp
+wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/${xvidcore_package}" && \
+     7z x "${xvidcore_package}" && rm -f "${xvidcore_package}" || build_package xvidcore
+wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/${libiconv_package}" && \
+     7z x "${libiconv_package}" && rm -f "${libiconv_package}" || build_package libiconv
+
+# build shaderc and crossc
 ninja shaderc crossc
 7z a -mx9 shaderc_and_crossc.7z \
     install/mingw/lib/libshaderc_combined.a \
