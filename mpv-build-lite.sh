@@ -1,7 +1,7 @@
 #!/bin/bash
 # clone repo
-git clone https://github.com/myfreeer/mpv-build-lite.git --branch=toolchain --depth=1
-cd mpv-build-lite
+git clone https://github.com/myfreeer/mpv-build-lite.git build --branch=toolchain --depth=1
+cd build
 
 # init toolchain versions
 gcc_version="$(cat toolchain/gcc-base.cmake | grep -ioP 'gcc-\d+\.\d+\.\d+' | sort -u | grep -ioP '[\d\.]+')"
@@ -9,6 +9,8 @@ binutils_version="$(cat toolchain/binutils.cmake | grep -ioP 'binutils-(\d+\.)+\
 gmp_version="$(grep -ioP 'gmp-((\d+\.)+\d+)' packages/gmp.cmake | cut -d'-' -f2)"
 xvidcore_version="$(grep -ioP 'xvidcore-((\d+\.)+\d+)' packages/xvidcore.cmake | cut -d'-' -f2)"
 libiconv_version="$(grep -ioP 'libiconv-((\d+\.)+\d+)' packages/libiconv.cmake | cut -d'-' -f2)"
+expat_version="$(grep -ioP 'expat-((\d+\.)+\d+)' packages/expat.cmake | cut -d'-' -f2)"
+lzo_version="$(grep -ioP 'lzo-((\d+\.)+\d+)' packages/lzo.cmake | cut -d'-' -f2)"
 
 # init cmake
 mkdir -p build64
@@ -53,6 +55,20 @@ build_package() {
         upload_to_github "${package}"
     fi
 }
+build_shaderc() {
+    ninja shaderc crossc
+    if [ -n "$GITHUB_TOKEN" ]; then
+        echo Packing shaderc_and_crossc...
+        7z a -mx9 shaderc_and_crossc.7z \
+            install/mingw/lib/libshaderc_combined.a \
+            install/mingw/include/shaderc/* \
+            install/mingw/include/crossc.h \
+            install/mingw/lib/pkgconfig/crossc.pc \
+            install/mingw/lib/libcrossc.a
+        echo Uploading shaderc_and_crossc to cache...
+        upload_to_github shaderc_and_crossc.7z
+    fi
+}
 # init toolchain
 toolchain_package="gcc-${gcc_version}_binutils-${binutils_version}.7z"
 gmp_package="gmp-${gmp_version}.7z"
@@ -60,7 +76,11 @@ gmp_files='install/mingw/share/info install/mingw/lib/libgmp* install/mingw/incl
 xvidcore_package="xvidcore-${xvidcore_version}.7z"
 xvidcore_files='install/mingw/include/xvid.h install/mingw/lib/libxvidcore*'
 libiconv_package="libiconv-${libiconv_version}.7z"
-libiconv_files='install/mingw/bin/iconv* install/mingw/share/man install/mingw/lib/libcharset* install/mingw/lib/libiconv* install/mingw/include/iconv.h install/mingw/include/libcharset.h install/mingw/include/localcharset.h'
+libiconv_files='install/mingw/bin/iconv* install/mingw/lib/libcharset* install/mingw/lib/libiconv* install/mingw/lib/charset.alias install/mingw/include/iconv.h install/mingw/include/libcharset.h install/mingw/include/localcharset.h'
+expat_package="expat-${expat_version}.7z"
+expat_files='install/mingw/bin/xmlwf.exe install/mingw/include/expat* install/mingw/lib/libexpat* install/mingw/lib/pkgconfig/expat.pc'
+lzo_package="lzo-${lzo_version}.7z"
+lzo_files='install/mingw/include/lzo install/mingw/lib/liblzo2* install/mingw/lib/pkgconfig/lzo2.pc install/mingw/share/doc/lzo'
 
 wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/${toolchain_package}" && \
      7z x "${toolchain_package}" && rm -f "${toolchain_package}" || build_toolchain
@@ -72,16 +92,15 @@ wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/${xvid
      7z x "${xvidcore_package}" && rm -f "${xvidcore_package}" || build_package xvidcore
 wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/${libiconv_package}" && \
      7z x "${libiconv_package}" && rm -f "${libiconv_package}" || build_package libiconv
+wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/${expat_package}" && \
+     7z x "${expat_package}" && rm -f "${expat_package}" || build_package expat
+wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/${lzo_package}" && \
+     7z x "${lzo_package}" && rm -f "${lzo_package}" || build_package lzo
 
 # build shaderc and crossc
-ninja shaderc crossc
-7z a -mx9 shaderc_and_crossc.7z \
-    install/mingw/lib/libshaderc_combined.a \
-    install/mingw/include/shaderc/* \
-    install/mingw/include/crossc.h \
-    install/mingw/lib/pkgconfig/crossc.pc \
-    install/mingw/lib/libcrossc.a
-    
-upload_to_github shaderc_and_crossc.7z
+wget -nv "https://github.com/myfreeer/build-cache/releases/download/cache/shaderc_and_crossc.7z" && \
+     7z x "shaderc_and_crossc.7z" && rm -f "shaderc_and_crossc.7z" || build_shaderc
+
+# dump build logs
 7z a -mx9 -r logs.7z *.log *.cmake *.ninja *.txt
 curl -F'file=@logs.7z' https://0x0.st
